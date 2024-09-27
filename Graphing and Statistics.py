@@ -10,6 +10,46 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import mannwhitneyu
+
+"""
+https://stackoverflow.com/questions/36153410/how-to-create-a-swarm-plot-with-matplotlib
+"""
+def simple_beeswarm2(y, nbins=None, width=1.):
+    """
+    Returns x coordinates for the points in ``y``, so that plotting ``x`` and
+    ``y`` results in a bee swarm plot.
+    """
+    y = np.asarray(y)
+    if nbins is None:
+        # nbins = len(y) // 6
+        nbins = np.ceil(len(y) / 6).astype(int)
+
+    # Get upper bounds of bins
+    x = np.zeros(len(y))
+
+    nn, ybins = np.histogram(y, bins=nbins)
+    nmax = nn.max()
+
+    #Divide indices into bins
+    ibs = []#np.nonzero((y>=ybins[0])*(y<=ybins[1]))[0]]
+    for ymin, ymax in zip(ybins[:-1], ybins[1:]):
+        i = np.nonzero((y>ymin)*(y<=ymax))[0]
+        ibs.append(i)
+
+    # Assign x indices
+    dx = width / (nmax // 2)
+    for i in ibs:
+        yy = y[i]
+        if len(i) > 1:
+            j = len(i) % 2
+            i = i[np.argsort(yy)]
+            a = i[j::2]
+            b = i[j+1::2]
+            x[a] = (0.5 + j / 3 + np.arange(len(b))) * dx
+            x[b] = (0.5 + j / 3 + np.arange(len(b))) * -dx
+
+    return x
+
 #%%
 """
 Figure 1C
@@ -37,7 +77,7 @@ plt.savefig('Figure_1C.svg', dpi=300, facecolor='w', edgecolor='b',
 plt.show()
 
 print(mannwhitneyu(plot_dict['DNA'], plot_dict['Label']))
-print(mannwhitneyu(plot_dict['No_Label'], plot_dict['Label']))
+print(mannwhitneyu(plot_dict['DNA'], plot_dict['No_Label']))
 #%%
 """
 Figure 1D
@@ -90,12 +130,12 @@ plt.xticks(ticks=[1,2], labels=plot_dict.keys(), fontsize=12, rotation=45)
 plt.scatter(np.ones(len(plot_dict['DNA'])), plot_dict['DNA'], alpha=0.5, color='red', s=75)
 plt.scatter(np.ones(len(plot_dict['Blank']))*2, plot_dict['Blank'], alpha=0.5, color='black', s=75, marker='D')
 
-#average biovolume of reporter strain (for both pilU and WT) at 4 d is ~10^4, -> limit of detection is set to 10^-4
-#to put the data on a log scale 0 values for the GFP channel, the transformaiton reporter channel, were set to 1x10^-4
-plt.hlines(y=10**-4, xmin=0.5, xmax=2.5, linewidth=1, linestyles='--', color='r')
+#maximal biovolume of reporter strain (for both pilU and WT) at 4 d is ~10^5, -> limit of detection is set to 10^-5
+#to put the data on a log scale 0 values for the GFP channel, the transformaiton reporter channel, were set to 1x10^-5
+plt.hlines(y=10**-5, xmin=0.5, xmax=2.5, linewidth=1, linestyles='--', color='r')
 
 plt.yticks(np.arange(0,0.1,0.02),fontsize=12)
-plt.ylim(10**-5, 10**0)
+plt.ylim(10**-6, 10**0)
 plt.yscale('log')
 plt.ylabel(r'Transformation Frequency', fontsize=12)
 plt.xlabel(r'Treatment', fontsize = 12)
@@ -104,11 +144,11 @@ plt.savefig('Figure1F.svg', dpi=300, facecolor='w', edgecolor='b',
         transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
 plt.show()
 
-#untransform the data (10**-4 becomes 0)
+#untransform the data (10**-5 becomes 0)
 for key in list(plot_dict.keys()):
     holder = []
     for i in plot_dict[key]:
-        if i == 10**-4:
+        if i == 10**-5:
             holder.append(0)
         else:
             holder.append(i)
@@ -129,15 +169,23 @@ plt.figure(figsize=(2,3))
 plt.boxplot(plot_dict.values(), widths=0.5, showfliers=False)
 plt.xticks(ticks=[1,2], labels=plot_dict.keys(), fontsize=12)
 
-plt.scatter(np.ones(len(plot_dict['WT'])), plot_dict['WT'], alpha=0.5, color='black', s=75)
-plt.scatter(np.ones(len(plot_dict['pilU']))*2, plot_dict['pilU'], alpha=0.5, color='blue', s=75)
+plt.scatter((np.ones(len(plot_dict['WT'])))*1, plot_dict['WT'], alpha=0.5, c='black', s=75)
+plt.scatter((np.ones(len(plot_dict['pilU'])))*2, plot_dict['pilU'], alpha=0.5, c='blue', s=75)
 
-#average biovolume of reporter strain (for both pilU and WT) at 4 d is ~10^4, -> limit of detection is set to 10^-4
-#to put the data on a log scale 0 values for the GFP channel, the transformaiton reporter channel, were set to 1x10^-4
-plt.hlines(y=10**-4, xmin=0.5, xmax=2.5, linewidth=1, linestyles='--', color='r')
+#maximum biovolume of reporter strain (for both pilU and WT) at 4 d is ~10^5, -> limit of detection is set to 10^-5
+#to put the data on a log scale 0 values for the GFP channel, the transformaiton reporter channel, were set to 1x10^-5
+plt.hlines(y=10**-5, xmin=0.5, xmax=2.5, linewidth=1, linestyles='--', color='r')
+
+# fig, ax = plt.subplots(1, 1, figsize=(2,3))
+# ax.boxplot([plot_dict['WT'], plot_dict['pilU']], widths=0.5, showfliers=False, showcaps=False)
+# x1 = simple_beeswarm2(plot_dict['WT'], width=0.25)
+# ax.plot(x1+1., plot_dict['WT'], 'o', color='black', markersize=7.5, alpha=0.5)
+# x2 = simple_beeswarm2(plot_dict['pilU'], width=0.25)
+# ax.plot(x2+2., plot_dict['pilU'], 'o', color='blue', markersize=7.5, alpha=0.5)
+# ax.plot(x2, y, 'o')
 
 plt.xticks(rotation=45)
-plt.ylim(10**-5, 10**0)
+plt.ylim(10**-6, 10**0)
 plt.yscale('log')
 plt.ylabel(r'Transformation Efficiency', fontsize=12)
 plt.xlabel(r'Strain', fontsize = 12)
@@ -150,7 +198,7 @@ plt.show()
 for key in list(plot_dict.keys()):
     holder = []
     for i in plot_dict[key]:
-        if i == 10**-4:
+        if i == 10**-5:
             holder.append(0)
         else:
             holder.append(i)
