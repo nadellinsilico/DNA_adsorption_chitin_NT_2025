@@ -227,3 +227,111 @@ plt.savefig('Figure2B.svg', dpi=300, facecolor='w', edgecolor='b',
         orientation='portrait', format='svg',
         transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
 plt.show()
+
+#%%
+"""
+SI Figure S2
+
+Spatial analysis of location relative to chitin
+"""
+df_ch1 = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S2_GFP')
+df_ch2 = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S2_mKate')
+
+minimum = 0
+maximum = 0
+
+if np.max(df_ch1['Distance_ToNearestObject_ch3']) > np.max(df_ch2['Distance_ToNearestObject_ch3']):
+    maximum += np.max(df_ch1['Distance_ToNearestObject_ch3'])
+else:
+    maximum += np.max(df_ch2['Distance_ToNearestObject_ch3'])
+    
+plt.figure(figsize=(3,4))
+df_ch2 = df_ch2.drop(df_ch2[df_ch2['Correlation_LocalOverlapFraction_ch1_ch2'] > 0].index, inplace=False)
+plt.hist(df_ch1['Distance_ToNearestObject_ch3'], density=True, color='gold', bins=100, cumulative=True, histtype='step', label='Transformed')
+plt.hist(df_ch2['Distance_ToNearestObject_ch3'], density=True, color='purple', bins=100, cumulative=True, histtype='step', label='Naive', range=[0, 34])
+plt.legend()
+plt.xlabel('Distance from chitin')
+plt.ylabel('Frequency')
+# plt.savefig('SpatialFrequency.svg', dpi=300, facecolor='w', edgecolor='b',
+#         orientation='portrait', format='svg',
+#         transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
+# plt.show()
+
+df_ch2 = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S2_mKate')
+
+bins = np.arange(0,maximum,0.5)
+ch1 = []
+ch2 = []
+ra = []
+df = df_ch2
+bins_sample = []
+dots_x = []
+dots_y = [] 
+for i in np.arange(0,len(bins)-1):
+    data2 = df.drop(df[(df['Distance_ToNearestObject_ch3'] < bins[i])|(df['Distance_ToNearestObject_ch3'] >= bins[i+1])].index, inplace=False)
+    print(data2['Distance_ToNearestObject_ch3'].max())
+    if len(data2) == 0:
+        print('no_data')
+    else:
+        ch1_abundance = np.sum(data2['Correlation_LocalOverlapFraction_ch1_ch2']*data2['Shape_Volume'])
+        data3 = data2.drop(data2[data2['Correlation_LocalOverlapFraction_ch1_ch2'] > 0].index, inplace=False)
+        ch2_abundance = np.sum(data3['Shape_Volume'])
+        ra.append(ch1_abundance/(ch1_abundance+ch2_abundance))
+        ch1.append(ch1_abundance)
+        ch2.append(ch2_abundance)
+        bins_sample.append(bins[i])
+
+fig, ax1 = plt.subplots(figsize=(6, 7))
+ax2 = ax1.twinx()
+ax1.plot(bins_sample, ra, 'black', label='Transformed relative abundance')
+ax2.plot(bins_sample, ch1, 'gold', linestyle='--', label='Transformed abundance')
+ax2.plot(bins_sample, ch2, 'purple', linestyle='--', label='Naive abundance')
+
+ax2.set_ylabel('Biovolume')
+ax1.set_ylabel('Transformed Relative Abundance')
+ax1.set_xlabel('Distance to chitin')
+# plt.savefig('SpatialRA', format='svg')
+plt.show()
+
+plt.figure(figsize=(3,4))
+plt.plot(bins_sample, ra, color='black')
+plt.scatter(bins_sample, ra, color='black', alpha=0.5)
+plt.xlabel('Distance to chitin')
+plt.ylabel('Transformed cells relative abundance')
+plt.savefig('SI_Figure_S2.svg', dpi=300, facecolor='w', edgecolor='b',
+        orientation='portrait', format='svg',
+        transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
+plt.show()
+plt.show()
+#%%
+"""
+SI Figure S3
+
+Replot of data from figure 2 comparing WT transformation frequency in planktonic and biofilm
+"""
+df = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S3')
+
+plot_dict = {'WT_Plank':df['WT_Plank'].dropna(), 
+             'WT_Biofilm':df['WT_Biofilm'].dropna()}
+
+print(mannwhitneyu(plot_dict['WT_Plank'], plot_dict['WT_Biofilm']))
+
+plot_dict = transform(plot_dict)
+plt.figure(figsize=(2,3))
+plt.boxplot(plot_dict.values(), widths=0.5, showfliers=False)
+plt.xticks(ticks=[1,2], labels=plot_dict.keys(), fontsize=12)
+
+plt.scatter((simple_beeswarm2(plot_dict['WT_Plank']))+1, plot_dict['WT_Plank'], alpha=0.5, c='black', s=75)
+plt.scatter((simple_beeswarm2(plot_dict['WT_Biofilm']))+2, plot_dict['WT_Biofilm'], alpha=0.5, c='black', s=75)
+
+plt.hlines(y=10**-5, xmin=0.5, xmax=2.5, linewidth=1, linestyles='--', color='r')
+
+plt.xticks(rotation=45)
+plt.ylim(10**-6, 10**0)
+plt.yscale('log')
+plt.ylabel(r'Transformation Efficiency', fontsize=12)
+plt.xlabel(r'Strain', fontsize = 12)
+plt.savefig('Figure2B.svg', dpi=300, facecolor='w', edgecolor='b',
+        orientation='portrait', format='svg',
+        transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
+plt.show()
