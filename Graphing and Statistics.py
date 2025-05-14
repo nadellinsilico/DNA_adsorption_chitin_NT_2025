@@ -4,7 +4,7 @@ Created on Thu Jun  6 14:07:40 2024
 
 @author: Jacob D. Holt
 
-Graphing and statistics for acuumulation and recobmination of DNA on chitin
+Download associated data sheet to recreate figures. 
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,9 +62,9 @@ def simple_beeswarm2(y, nbins=10, width=.25):
 
 """
 for log plot
-transform the data (0 becomes 10**-5)
+transform the data (0 -> 10**-5)
 maximum biovolume of reporter strain (for both pilU and WT) at 4 d is ~10^5, -> limit of detection is set to 10^-5
-to put the data on a log scale 0 values for the GFP channel, the transformaiton reporter channel, are set to 1x10^-5
+to put the data on a log scale 0 values for the GFP channel, the transformation reporter channel, are set to 1x10^-5
 """
 def transform(dict_in):
     for key in list(dict_in.keys()):
@@ -233,6 +233,8 @@ plt.show()
 SI Figure S2
 
 Spatial analysis of location relative to chitin
+
+A couple different plots. 
 """
 df_ch1 = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S2_GFP')
 df_ch2 = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S2_mKate')
@@ -251,11 +253,11 @@ plt.hist(df_ch1['Distance_ToNearestObject_ch3'], density=True, color='gold', bin
 plt.hist(df_ch2['Distance_ToNearestObject_ch3'], density=True, color='purple', bins=100, cumulative=True, histtype='step', label='Naive', range=[0, 34])
 plt.legend()
 plt.xlabel('Distance from chitin')
-plt.ylabel('Frequency')
+plt.ylabel('Cumulative Frequency')
 # plt.savefig('SpatialFrequency.svg', dpi=300, facecolor='w', edgecolor='b',
 #         orientation='portrait', format='svg',
 #         transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
-# plt.show()
+plt.show()
 
 df_ch2 = pd.read_excel('SI_Data.xlsx', sheet_name='SI_Figure_S2_mKate')
 
@@ -265,8 +267,6 @@ ch2 = []
 ra = []
 df = df_ch2
 bins_sample = []
-dots_x = []
-dots_y = [] 
 for i in np.arange(0,len(bins)-1):
     data2 = df.drop(df[(df['Distance_ToNearestObject_ch3'] < bins[i])|(df['Distance_ToNearestObject_ch3'] >= bins[i+1])].index, inplace=False)
     print(data2['Distance_ToNearestObject_ch3'].max())
@@ -281,18 +281,6 @@ for i in np.arange(0,len(bins)-1):
         ch2.append(ch2_abundance)
         bins_sample.append(bins[i])
 
-fig, ax1 = plt.subplots(figsize=(6, 7))
-ax2 = ax1.twinx()
-ax1.plot(bins_sample, ra, 'black', label='Transformed relative abundance')
-ax2.plot(bins_sample, ch1, 'gold', linestyle='--', label='Transformed abundance')
-ax2.plot(bins_sample, ch2, 'purple', linestyle='--', label='Naive abundance')
-
-ax2.set_ylabel('Biovolume')
-ax1.set_ylabel('Transformed Relative Abundance')
-ax1.set_xlabel('Distance to chitin')
-# plt.savefig('SpatialRA', format='svg')
-plt.show()
-
 plt.figure(figsize=(3,4))
 plt.plot(bins_sample, ra, color='black')
 plt.scatter(bins_sample, ra, color='black', alpha=0.5)
@@ -301,7 +289,6 @@ plt.ylabel('Transformed cells relative abundance')
 plt.savefig('SI_Figure_S2.svg', dpi=300, facecolor='w', edgecolor='b',
         orientation='portrait', format='svg',
         transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
-plt.show()
 plt.show()
 #%%
 """
@@ -331,7 +318,7 @@ plt.ylim(10**-6, 10**0)
 plt.yscale('log')
 plt.ylabel(r'Transformation Efficiency', fontsize=12)
 plt.xlabel(r'Strain', fontsize = 12)
-plt.savefig('Figure2B.svg', dpi=300, facecolor='w', edgecolor='b',
+plt.savefig('SI_Figure_S3.svg', dpi=300, facecolor='w', edgecolor='b',
         orientation='portrait', format='svg',
         transparent=False, bbox_inches='tight', pad_inches=.05, metadata=None)
 plt.show()
